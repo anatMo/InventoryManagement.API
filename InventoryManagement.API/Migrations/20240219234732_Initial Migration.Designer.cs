@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InventoryManagement.API.Migrations
 {
     [DbContext(typeof(InventoryManagementDbContext))]
-    [Migration("20240219215509_Initial Migration")]
+    [Migration("20240219234732_Initial Migration")]
     partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,23 +26,23 @@ namespace InventoryManagement.API.Migrations
 
             modelBuilder.Entity("InventoryManagement.API.Models.Product", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("ProductId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Category")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Price")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long>("Price")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("ProductName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UnitsInStock")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long>("UnitsInStock")
+                        .HasColumnType("bigint");
 
-                    b.HasKey("Id");
+                    b.HasKey("ProductId");
 
                     b.ToTable("Products");
                 });
