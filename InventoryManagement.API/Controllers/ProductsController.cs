@@ -10,15 +10,15 @@ namespace InventoryManagement.API.Controllers
     [Route("api/[controller]")]
     public class ProductsController : Controller
     {
-        private readonly InventoryManagementDbContext _inventoryManagementDbContext;
-        public ProductsController(InventoryManagementDbContext inventoryManagementContext)
+        private readonly AppDbContext _appDbContext;
+        public ProductsController(AppDbContext inventoryManagementContext)
         {
-            _inventoryManagementDbContext = inventoryManagementContext;
+            _appDbContext = inventoryManagementContext;
         }
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _inventoryManagementDbContext.Products.ToListAsync();
+            var products = await _appDbContext.Products.ToListAsync();
 
             return Ok(products);
         }
@@ -28,8 +28,8 @@ namespace InventoryManagement.API.Controllers
         {
             productRequest.ProductId = Guid.NewGuid();
 
-            await _inventoryManagementDbContext.Products.AddAsync(productRequest);
-            await _inventoryManagementDbContext.SaveChangesAsync();
+            await _appDbContext.Products.AddAsync(productRequest);
+            await _appDbContext.SaveChangesAsync();
 
             return Ok(productRequest);
         }
@@ -39,7 +39,7 @@ namespace InventoryManagement.API.Controllers
         public async Task<IActionResult> GetProduct([FromRoute] Guid productId)
         {
             var product=
-                await _inventoryManagementDbContext.Products.FirstOrDefaultAsync(x => x.ProductId == productId);
+                await _appDbContext.Products.FirstOrDefaultAsync(x => x.ProductId == productId);
 
             if(product == null)
             {
@@ -53,7 +53,7 @@ namespace InventoryManagement.API.Controllers
         [Route("{productId:Guid}")]
         public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, Product updateProductRequest)
         {
-            var product = await _inventoryManagementDbContext.Products.FindAsync(productId);
+            var product = await _appDbContext.Products.FindAsync(productId);
 
             if(product == null)
             {
@@ -65,7 +65,7 @@ namespace InventoryManagement.API.Controllers
             product.Price = updateProductRequest.Price;
             product.UnitsInStock = updateProductRequest.UnitsInStock;
 
-            await _inventoryManagementDbContext.SaveChangesAsync();
+            await _appDbContext.SaveChangesAsync();
 
             return Ok(product);
         }
@@ -74,15 +74,15 @@ namespace InventoryManagement.API.Controllers
         [Route("{productId:Guid}")]
         public async Task<IActionResult> DeleteProduct([FromRoute] Guid productId)
         {
-            var product = await _inventoryManagementDbContext.Products.FindAsync(productId);
+            var product = await _appDbContext.Products.FindAsync(productId);
 
             if(product == null)
             {
                 return NotFound();
             }
 
-            _inventoryManagementDbContext.Products.Remove(product);
-            await _inventoryManagementDbContext.SaveChangesAsync();
+            _appDbContext.Products.Remove(product);
+            await _appDbContext.SaveChangesAsync();
 
             return Ok(product);
         }
