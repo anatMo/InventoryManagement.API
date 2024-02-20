@@ -69,5 +69,22 @@ namespace InventoryManagement.API.Controllers
 
             return Ok(product);
         }
+
+        [HttpDelete]
+        [Route("{productId:Guid}")]
+        public async Task<IActionResult> DeleteProduct([FromRoute] Guid productId)
+        {
+            var product = await _inventoryManagementDbContext.Products.FindAsync(productId);
+
+            if(product == null)
+            {
+                return NotFound();
+            }
+
+            _inventoryManagementDbContext.Products.Remove(product);
+            await _inventoryManagementDbContext.SaveChangesAsync();
+
+            return Ok(product);
+        }
     }
 }
