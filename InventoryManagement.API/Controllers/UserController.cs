@@ -1,4 +1,5 @@
 ﻿using InventoryManagement.API.Data;
+using InventoryManagement.API.Helpers;
 using InventoryManagement.API.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,10 +27,16 @@ namespace InventoryManagement.API.Controllers
             }
 
             var user = await _appDbContext.Users
-                .FirstOrDefaultAsync(x => x.Email == userRequest.Email && x.Password == userRequest.Password);
+                .FirstOrDefaultAsync(x => x.Email == userRequest.Email);
+
             if(user == null)
             {
                 return NotFound(new {Message = "User Not Found"});
+            }
+
+            if (!PasswordHasher.VerifyPassword(userRequest.Password, user.Password))
+            {
+                return BadRequest(new { Message = "Password is Incorrect" });
             }
 
             return Ok(new
@@ -46,12 +53,27 @@ namespace InventoryManagement.API.Controllers
                 return BadRequest();
             }
 
+            //check email
+            if(await CheckEmailExistAsync(userRequest.Email))
+            {
+                return BadRequest(new { Message = "Email Already Exist" });
+            }
+
+            userRequest.Password = PasswordHasher.HashPassword(userRequest.Password);
+            userRequest.Role = "User";
+            userRequest.Token = "";
+
             await _appDbContext.Users.AddAsync(userRequest);
             await _appDbContext.SaveChangesAsync();
             return Ok(new
             {
                 Message = "User Registered"
             });
+        }
+
+        private async Task<bool> CheckEmailExistAsync(string email)
+        {
+            return await _appDbContext.Users.AnyAsync(x => x.Email == email);
         }
 
     }
