@@ -82,7 +82,7 @@ namespace InventoryManagement.API.Controllers
 
                 await _appDbContext.SaveChangesAsync();
 
-                return Ok("Product was updated");
+                return Ok("Product Updated");
             }
             catch (Exception ex)
             {
@@ -103,7 +103,7 @@ namespace InventoryManagement.API.Controllers
                 _appDbContext.Products.Remove(product);
                 await _appDbContext.SaveChangesAsync();
 
-                return Ok("Product was deleted");
+                return Ok("Product Deleted");
             }
             catch (Exception ex)
             {

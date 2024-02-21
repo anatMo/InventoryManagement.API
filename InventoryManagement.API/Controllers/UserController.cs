@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace InventoryManagement.API.Controllers
 {
@@ -16,67 +16,79 @@ namespace InventoryManagement.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _appDbContext;
-        public static readonly string SecretKey = "veryverysecret.....";
+        private readonly string _secretKey = "";
 
-        public UserController(AppDbContext appDbContext)
+        public UserController(AppDbContext appDbContext, IConfiguration configuration)
         {
             _appDbContext = appDbContext;
+            _secretKey = configuration["AppSettings:SecretKey"];
         }
 
         [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate([FromBody] User userRequest)
         {
-            if(userRequest == null) 
+            try
             {
-                return BadRequest();
+                if (userRequest == null)
+                {
+                    return BadRequest("User is Null");
+                }
+
+                var user = await _appDbContext.Users
+                    .FirstOrDefaultAsync(x => x.Email == userRequest.Email);
+
+                if (user == null)
+                {
+                    return Unauthorized("User Not Found");
+                }
+
+                if (!PasswordHasher.VerifyPassword(userRequest.Password, user.Password))
+                {
+                    return Unauthorized("Password is Incorrect");
+                }
+
+                user.Token = CreateJWT(user);
+                user.LastLogin = DateTime.Now;
+                await _appDbContext.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    Token = user.Token,
+                    Message = "Login Success"
+                });
             }
-
-            var user = await _appDbContext.Users
-                .FirstOrDefaultAsync(x => x.Email == userRequest.Email);
-
-            if(user == null)
+            catch (Exception ex)
             {
-                return NotFound(new {Message = "User Not Found"});
+                return StatusCode(500, $"An error occurred: {ex.Message}");
             }
-
-            if (!PasswordHasher.VerifyPassword(userRequest.Password, user.Password))
-            {
-                return BadRequest(new { Message = "Password is Incorrect" });
-            }
-
-            user.Token = CreateJWT(user);
-            user.LastLogin = DateTime.Now;
-            await _appDbContext.SaveChangesAsync();
-
-            return Ok(new
-            {
-                Token = user.Token,
-                Message = "Login Success"
-            });
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] User userRequest)
         {
-            if (userRequest == null) 
+            try
             {
-                return BadRequest();
-            }
-            if(await CheckEmailExistAsync(userRequest.Email))
-            {
-                return BadRequest(new { Message = "Email Already Exist" });
-            }
+                if (userRequest == null)
+                {
+                    return BadRequest("User is Null");
+                }
+                if (await CheckEmailExistAsync(userRequest.Email))
+                {
+                    return BadRequest("Email Already Exist");
+                }
 
-            userRequest.Password = PasswordHasher.HashPassword(userRequest.Password);
-            userRequest.Role = "User";
-            userRequest.Token = "";
+                userRequest.Password = PasswordHasher.HashPassword(userRequest.Password);
+                userRequest.Role = "User";
+                userRequest.Token = "";
 
-            await _appDbContext.Users.AddAsync(userRequest);
-            await _appDbContext.SaveChangesAsync();
-            return Ok(new
+                await _appDbContext.Users.AddAsync(userRequest);
+                await _appDbContext.SaveChangesAsync();
+                return Ok("User Registered");
+            }
+            catch (Exception ex)
             {
-                Message = "User Registered"
-            });
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         private async Task<bool> CheckEmailExistAsync(string email)
@@ -87,7 +99,7 @@ namespace InventoryManagement.API.Controllers
         private string CreateJWT(User user)
         {
             var jwtHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(SecretKey);
+            var key = Encoding.ASCII.GetBytes(_secretKey);
             var identity = new ClaimsIdentity(new Claim[]
             {
                 new Claim(ClaimTypes.Role, user.Role),
@@ -110,8 +122,36 @@ namespace InventoryManagement.API.Controllers
         [HttpGet]
         public async Task<ActionResult<User>> GetAllUsers()
         {
-            return Ok(await _appDbContext.Users.ToListAsync());
+            try
+            {
+                return Ok(await _appDbContext.Users.ToListAsync());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteUser(Guid userId)
+        {
+            try
+            {
+                var user = await _appDbContext.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return NotFound("User Not Found");
+                }
+
+                _appDbContext.Users.Remove(user);
+                await _appDbContext.SaveChangesAsync();
+
+                return Ok("User Deleted");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
     }
 }
