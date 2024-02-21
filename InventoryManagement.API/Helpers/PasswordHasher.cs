@@ -13,19 +13,19 @@ namespace InventoryManagement.API.Helpers
         {
             byte[] salt;
             rng.GetBytes(salt = new byte[SaltSize]);
-            var key = new Rfc2898DeriveBytes(password,salt,Iterations);
+            var key = new Rfc2898DeriveBytes(password, salt, Iterations);
             var hash = key.GetBytes(HashSize);
 
             var hashBytes = new byte[SaltSize + HashSize];
 
-            Array.Copy(salt, 0,hashBytes, 0, SaltSize);
-            Array.Copy(hash, 0,hashBytes, SaltSize, HashSize);
-            
+            Array.Copy(salt, 0, hashBytes, 0, SaltSize);
+            Array.Copy(hash, 0, hashBytes, SaltSize, HashSize);
+
             var base64Hash = Convert.ToBase64String(hashBytes);
             return base64Hash;
         }
 
-        public static bool VerifyPassword(string password, string base64Hash) 
+        public static bool VerifyPassword(string password, string base64Hash)
         {
             var hashBytes = Convert.FromBase64String(base64Hash);
 

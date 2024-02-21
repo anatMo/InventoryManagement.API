@@ -73,7 +73,7 @@ namespace InventoryManagement.API.Controllers
             {
                 var product = await _appDbContext.Products.FindAsync(productId);
                 if (product == null)
-                    return NotFound("Product Not Found");
+                    return NotFound(new { Message = "Product Not Found" });
 
                 product.ProductName = updateProductRequest.ProductName;
                 product.Category = updateProductRequest.Category;
@@ -82,7 +82,7 @@ namespace InventoryManagement.API.Controllers
 
                 await _appDbContext.SaveChangesAsync();
 
-                return Ok("Product Updated");
+                return Ok(new { Message = "Product Updated" });
             }
             catch (Exception ex)
             {
@@ -98,12 +98,12 @@ namespace InventoryManagement.API.Controllers
             {
                 var product = await _appDbContext.Products.FindAsync(productId);
                 if (product == null)
-                    return NotFound();
+                    return NotFound(new { Message = "Product Not Found" });
 
                 _appDbContext.Products.Remove(product);
                 await _appDbContext.SaveChangesAsync();
 
-                return Ok("Product Deleted");
+                return Ok(new { Message = "Product Deleted" });
             }
             catch (Exception ex)
             {

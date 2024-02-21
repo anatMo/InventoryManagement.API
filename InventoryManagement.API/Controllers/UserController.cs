@@ -31,7 +31,7 @@ namespace InventoryManagement.API.Controllers
             {
                 if (userRequest == null)
                 {
-                    return BadRequest("User is Null");
+                    return BadRequest(new { Message = "User is Null" });
                 }
 
                 var user = await _appDbContext.Users
@@ -39,12 +39,12 @@ namespace InventoryManagement.API.Controllers
 
                 if (user == null)
                 {
-                    return Unauthorized("User Not Found");
+                    return Unauthorized(new { Message = "Email Not Found" });
                 }
 
                 if (!PasswordHasher.VerifyPassword(userRequest.Password, user.Password))
                 {
-                    return Unauthorized("Password is Incorrect");
+                    return Unauthorized(new { Message = "Password is Incorrect" });
                 }
 
                 user.Token = CreateJWT(user);
@@ -70,11 +70,11 @@ namespace InventoryManagement.API.Controllers
             {
                 if (userRequest == null)
                 {
-                    return BadRequest("User is Null");
+                    return BadRequest(new { Message = "User is Null" });
                 }
                 if (await CheckEmailExistAsync(userRequest.Email))
                 {
-                    return BadRequest("Email Already Exist");
+                    return BadRequest(new { Message = "Email Already Exist" });
                 }
 
                 userRequest.Password = PasswordHasher.HashPassword(userRequest.Password);
@@ -83,7 +83,7 @@ namespace InventoryManagement.API.Controllers
 
                 await _appDbContext.Users.AddAsync(userRequest);
                 await _appDbContext.SaveChangesAsync();
-                return Ok("User Registered");
+                return Ok(new { Message = "User Registered" });
             }
             catch (Exception ex)
             {
@@ -140,13 +140,13 @@ namespace InventoryManagement.API.Controllers
                 var user = await _appDbContext.Users.FindAsync(userId);
                 if (user == null)
                 {
-                    return NotFound("User Not Found");
+                    return NotFound(new { Message = "User Not Found" });
                 }
 
                 _appDbContext.Users.Remove(user);
                 await _appDbContext.SaveChangesAsync();
 
-                return Ok("User Deleted");
+                return Ok(new { Message = "User Deleted" });
             }
             catch (Exception ex)
             {
