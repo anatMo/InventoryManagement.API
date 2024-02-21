@@ -58,7 +58,7 @@ namespace InventoryManagement.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> RegisterUser([FromBody] User userRequest)
         {
-            if(userRequest == null) 
+            if (userRequest == null) 
             {
                 return BadRequest();
             }

@@ -3,6 +3,7 @@ using InventoryManagement.API.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace InventoryManagement.API.Controllers
 {
@@ -15,76 +16,99 @@ namespace InventoryManagement.API.Controllers
         {
             _appDbContext = inventoryManagementContext;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAllProducts()
         {
-            var products = await _appDbContext.Products.ToListAsync();
-
-            return Ok(products);
+            try
+            {
+                var products = await _appDbContext.Products.ToListAsync();
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving products: " + ex.Message);
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> AddProduct([FromBody] Product productRequest)
         {
-            productRequest.ProductId = Guid.NewGuid();
-
-            await _appDbContext.Products.AddAsync(productRequest);
-            await _appDbContext.SaveChangesAsync();
-
-            return Ok(productRequest);
+            try
+            {
+                productRequest.ProductId = Guid.NewGuid();
+                await _appDbContext.Products.AddAsync(productRequest);
+                await _appDbContext.SaveChangesAsync();
+                return Created("Product added", productRequest);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error adding product: " + ex.Message);
+            }
         }
 
         [HttpGet]
         [Route("{productId:Guid}")]
         public async Task<IActionResult> GetProduct([FromRoute] Guid productId)
         {
-            var product=
-                await _appDbContext.Products.FirstOrDefaultAsync(x => x.ProductId == productId);
-
-            if(product == null)
+            try
             {
-                return NotFound();
-            }
+                var product = await _appDbContext.Products.FirstOrDefaultAsync(x => x.ProductId == productId);
+                if (product == null)
+                    return NotFound("Product Not Found");
 
-            return Ok(product);
+                return Ok(product);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving product: " + ex.Message);
+            }
         }
 
         [HttpPut]
         [Route("{productId:Guid}")]
         public async Task<IActionResult> UpdateProduct([FromRoute] Guid productId, Product updateProductRequest)
         {
-            var product = await _appDbContext.Products.FindAsync(productId);
-
-            if(product == null)
+            try
             {
-                return NotFound();
+                var product = await _appDbContext.Products.FindAsync(productId);
+                if (product == null)
+                    return NotFound("Product Not Found");
+
+                product.ProductName = updateProductRequest.ProductName;
+                product.Category = updateProductRequest.Category;
+                product.Price = updateProductRequest.Price;
+                product.UnitsInStock = updateProductRequest.UnitsInStock;
+
+                await _appDbContext.SaveChangesAsync();
+
+                return Ok("Product was updated");
             }
-
-            product.ProductName = updateProductRequest.ProductName;
-            product.Category = updateProductRequest.Category;
-            product.Price = updateProductRequest.Price;
-            product.UnitsInStock = updateProductRequest.UnitsInStock;
-
-            await _appDbContext.SaveChangesAsync();
-
-            return Ok(product);
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error updating product: " + ex.Message);
+            }
         }
 
         [HttpDelete]
         [Route("{productId:Guid}")]
         public async Task<IActionResult> DeleteProduct([FromRoute] Guid productId)
         {
-            var product = await _appDbContext.Products.FindAsync(productId);
-
-            if(product == null)
+            try
             {
-                return NotFound();
+                var product = await _appDbContext.Products.FindAsync(productId);
+                if (product == null)
+                    return NotFound();
+
+                _appDbContext.Products.Remove(product);
+                await _appDbContext.SaveChangesAsync();
+
+                return Ok("Product was deleted");
             }
-
-            _appDbContext.Products.Remove(product);
-            await _appDbContext.SaveChangesAsync();
-
-            return Ok(product);
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting product: " + ex.Message);
+            }
         }
     }
 }
