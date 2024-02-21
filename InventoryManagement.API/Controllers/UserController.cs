@@ -45,6 +45,8 @@ namespace InventoryManagement.API.Controllers
             }
 
             user.Token = CreateJWT(user);
+            user.LastLogin = DateTime.Now;
+            await _appDbContext.SaveChangesAsync();
 
             return Ok(new
             {
@@ -60,8 +62,6 @@ namespace InventoryManagement.API.Controllers
             {
                 return BadRequest();
             }
-
-            //check email
             if(await CheckEmailExistAsync(userRequest.Email))
             {
                 return BadRequest(new { Message = "Email Already Exist" });
