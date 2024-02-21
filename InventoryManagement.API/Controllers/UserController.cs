@@ -16,6 +16,8 @@ namespace InventoryManagement.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _appDbContext;
+
+        // secret key stored in appsettings.json- initialize in constructor
         private readonly string _secretKey = "";
 
         public UserController(AppDbContext appDbContext, IConfiguration configuration)
@@ -119,6 +121,8 @@ namespace InventoryManagement.API.Controllers
             return jwtHandler.WriteToken(token);
         }
 
+
+        // no use in this project, build for tests
         [HttpGet]
         public async Task<ActionResult<User>> GetAllUsers()
         {
@@ -132,6 +136,7 @@ namespace InventoryManagement.API.Controllers
             }
         }
 
+        // no use in this project, build for tests
         [HttpDelete("{userId}")]
         public async Task<IActionResult> DeleteUser(Guid userId)
         {

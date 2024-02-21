@@ -2,6 +2,7 @@
 
 namespace InventoryManagement.API.Helpers
 {
+    // class used to hash passwors in db
     public class PasswordHasher
     {
         private static RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
